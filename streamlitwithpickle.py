@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 import pandas as pd
+import os
 
 # Sayfa ayarları
 st.set_page_config(page_title="Mf, Pf, and Pm Prediction", layout="wide")
@@ -36,21 +37,21 @@ st.markdown("""
 st.title("🌍 AI-Powered Mf, Pf, and Pm Prediction")
 st.markdown("### 📊 Enter the input values below and get real-time predictions.")
 
-
 # Pickle dosyalarını yükle
 @st.cache_resource
 def load_models():
-    with open("preprocessor.pkl", "rb") as f:
+    base_path = os.path.dirname(__file__)  # Model dosyalarının bulunduğu dizini belirle
+
+    with open(os.path.join(base_path, "preprocessor.pkl"), "rb") as f:
         preprocessor = pickle.load(f)
-    with open("gb_model.pkl", "rb") as f:
+    with open(os.path.join(base_path, "gb_model.pkl"), "rb") as f:
         gb_model = pickle.load(f)
-    with open("catboost_model.pkl", "rb") as f:
+    with open(os.path.join(base_path, "catboost_model.pkl"), "rb") as f:
         catboost_model = pickle.load(f)
-    with open("xgb_model.pkl", "rb") as f:
+    with open(os.path.join(base_path, "xgb_model.pkl"), "rb") as f:
         xgb_model = pickle.load(f)
 
     return preprocessor, gb_model, catboost_model, xgb_model
-
 
 preprocessor, gb_model, catboost_model, xgb_model = load_models()
 
@@ -82,8 +83,11 @@ for i, col in enumerate(numeric_columns):
 if st.button("🔍 Predict Mf, Pf and Pm"):
     input_array = np.array(input_data).reshape(1, -1)
 
+    # ✅ NumPy array'ı Pandas DataFrame'e çevirerek hatayı düzelttik
+    input_df = pd.DataFrame(input_array, columns=numeric_columns)
+
     # Veriyi dönüştürme
-    input_transformed = preprocessor.transform(input_array)
+    input_transformed = preprocessor.transform(input_df)
 
     # Mf tahminini yapma
     mf_prediction = gb_model.predict(input_transformed)[0]
